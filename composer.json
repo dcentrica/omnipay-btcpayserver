@@ -1,0 +1,41 @@
+{
+    "name": "dcentrica/omnipay-btcpayserver",
+    "type": "library",
+    "description": "BTCPayServer driver for the Omnipay payment processing library",
+    "keywords": [
+        "bitcoin",
+        "btcpayserver",
+        "gateway",
+        "merchant",
+        "omnipay",
+        "pay",
+        "payment"
+    ],
+    "homepage": "https://dcentrica.com/",
+    "license": "BSD3",
+    "authors": [
+        {
+            "name": "Russell Michell",
+            "email": "hello@dcentrica.com"
+        },
+        {
+            "name": "Elliot Sawyer",
+            "email": "elliot.sawyer@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": { "Dcentrica\Omnipay\\BTCPayServer\\" : "src/" }
+    },
+    "require": {
+        "php": ">=7.1",
+        "omnipay/common": "~3.0"
+    },
+    "require-dev": {
+        "omnipay/tests": "~3.0"
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "3.0.x-dev"
+        }
+    }
+}
