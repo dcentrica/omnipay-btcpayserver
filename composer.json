@@ -24,11 +24,14 @@
         }
     ],
     "autoload": {
-        "psr-4": { "Dcentrica\Omnipay\\BTCPayServer\\" : "src/" }
+        "psr-4": {
+            "Dcentrica\\Omnipay\\BTCPayServer\\": "src/"
+        }
     },
     "require": {
         "php": ">=7.1",
-        "omnipay/common": "~3.0"
+        "omnipay/common": "~3.0",
+        "bitpay/php-client": "dev-master"
     },
     "require-dev": {
         "omnipay/tests": "~3.0"
@@ -37,5 +40,11 @@
         "branch-alias": {
             "dev-master": "3.0.x-dev"
         }
-    }
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/btcpayserver/php-bitpay-client.git"
+        }
+    ]
 }

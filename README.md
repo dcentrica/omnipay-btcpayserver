@@ -8,6 +8,14 @@
 [Omnipay](https://github.com/thephpleague/omnipay) is a framework agnostic, multi-gateway payment
 processing library for PHP 5.3+. This package implements [BTCPayServer](https://btcpayserver.org/) support for Omnipay.
 
+## TODO
+
+This library should just wrap around the tutorial notes from the btcpayserver lib: https://github.com/btcpayserver/php-bitpay-client/blob/master/examples/tutorial/003_createInvoice.php
+
+* Mod AbstractRequest::sendData() with "Create Invoice" feature. See: btcpayserver/php-bitpay-client
+* Add "generateKeys" feature (Tidy up 001_generateKeys.php from btcpayserver/php-bitpay-client)
+* Get pairing code from btcpayserer itself and add as `BTCPAYSERVER_PAIRING_TOKEN` to .env (Skip 002_pair.php from btcpayserver/php-bitpay-client)
+
 ## Installation
 
 This Omnipay driver is installed via [Composer](http://getcomposer.org/). To install it, simply add it
