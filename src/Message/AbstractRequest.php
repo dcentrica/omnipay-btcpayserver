@@ -8,15 +8,17 @@
 
 namespace Dcentrica\Omnipay\BTCPayServer\Message;
 
-use \Omnipay\Common\Message\AbstractRequest as CommonAbstractRequest;
-use \Bitpay\Storage\EncryptedFilesystemStorage;
-use \Bitpay\Client\Client as BTCPayClient;
-use \Bitpay\Client\Adapter\CurlAdapter;
-use \Bitpay\Token;
-use \Bitpay\Invoice;
-use \Bitpay\Buyer;
-use \Bitpay\Item;
-use \Bitpay\Currency;
+use Omnipay\Common\Message\AbstractRequest as CommonAbstractRequest;
+use Omnipay\Common\Message\AbstractResponse as CommonAbstractResponse;
+use Bitpay\Storage\EncryptedFilesystemStorage;
+use Bitpay\Client\Client as BTCPayClient;
+use Bitpay\Client\Adapter\CurlAdapter;
+use Bitpay\Token;
+use Bitpay\Invoice;
+use Bitpay\Buyer;
+use Bitpay\Item;
+use Bitpay\Currency;
+use Dcentrica\Omnipay\BTCPayServer\Exception\BTCPayException;
 
 abstract class AbstractRequest extends CommonAbstractRequest
 {
@@ -36,6 +38,31 @@ abstract class AbstractRequest extends CommonAbstractRequest
     protected $pairingToken = '';
 
     /**
+     * @var string
+     */
+    protected $keyPrivateLocation = '';
+
+    /**
+     * @var string
+     */
+    protected $keyPublicLocation = '';
+
+    /**
+     * @var string
+     */
+    protected $serverLocation = '';
+
+    /**
+     * @var string
+     */
+    protected $configEncryptionPasswd = '';
+
+    /**
+     * @var string
+     */
+    protected $configIPNCallbackURL = '';
+
+    /**
      * @return void
      */
     public function __construct()
@@ -45,6 +72,11 @@ abstract class AbstractRequest extends CommonAbstractRequest
         // e.g. https://test.bitpay.com/api
         $this->testEndpoint = getenv('BTCPAYSERVER_ENDPOINT_TEST');
         $this->pairingToken = getenv('BTCPAYSERVER_PAIRING_TOKEN');
+        $this->keyPrivateLocation = getenv('BTCPAYSERVER_PRIKEY_LOC') ?? '/tmp/bitpay.pri';
+        $this->keyPublicLocation = getenv('BTCPAYSERVER_PUBKEY_LOC') ?? '/tmp/bitpay.pub';
+        $this->serverLocation = getenv('BTCPAYSERVER_URL');
+        $this->configEncryptionPasswd = getenv('BTCPAYSERVER_CONF_ENC_PASS'); // TODO use DEK instead
+        $this->configIPNCallbackURL = getenv('BTCPAYSERVER_CONF_IPN_CALLBACK_URL');
     }
 
     /**
@@ -89,15 +121,84 @@ abstract class AbstractRequest extends CommonAbstractRequest
      *          Put this: https://github.com/btcpayserver/php-bitpay-client/blob/master/examples/tutorial/003_createInvoice.php
      *          ..into sendData().
      *       2. Debug what we get out of `$data` when running a shop, before it's sent to btcpay
+     *       4. TODO: Add 'item' array/object to $data representing the thing that was purchased
      *       3. All the stuff from 1. should prob be munged into `$data` and sent along with it 
+     *       ...maybe this is better to go into `PurchaseRequest`??
      * 
      *       See:
      * 
      *       - https://github.com/thephpleague/omnipay-common/search?q=sendData&unscoped_q=sendData
      *       - https://github.com/thephpleague/omnipay-braintree/search?q=setData&unscoped_q=sendData
      */
-    public function sendData($data): AbstractResponse
+    public function sendData($data): CommonAbstractResponse
     {
+        // Untested, buggy as hell code for sending invoice data to BTCPayServer...
+        // See 002.php for explanation
+        // Password may need to be updated if you changed it
+        $storageEngine = new EncryptedFilesystemStorage($this->configEncryptionPasswd);
+        $privateKey = $storageEngine->load($this->keyPrivateLocation);
+        $publicKey = $storageEngine->load($this->keyPublicLocation);
+        $client = new BTCPayClient();
+        $adapter = new CurlAdapter();
+        $client->setPrivateKey($privateKey);
+        $client->setPublicKey($publicKey);
+        $client->setUri($this->serverLocation);
+        $client->setAdapter($adapter);
+
+        // The last object that must be injected is the token object.
+        $token = new Token();
+        $token->setToken('UpdateThisValue'); // TODO - UPDATE THIS VALUE, where's it come from!?
+
+        // Token object is injected into the client
+        $client->setToken($token);
+
+        /**
+         * Create an Invoice object. Ensure to check the `InvoiceInterface` for methods
+         * able to uses.
+         */
+        $buyer = (new Buyer())->setEmail($item['buyer']['email']);
+
+        // Add the buyer's info to the invoice
+        $invoice = (new Invoice())->setBuyer($buyer);
+
+        // `Item` is used to keep track of a few things
+        $item = (new Item())
+            ->setCode($item['sku'])
+            ->setDescription($item['description'])
+            ->setPrice($item['price']);
+        $invoice->setItem($item);
+
+        /**
+         * BTCPayServer supports multiple currencies. Most shopping cart applications
+         * have a defined set of currencies that can be used.
+         * Setting this to one of the supported currencies will create an invoice using
+         * the exchange rate for that currency.
+         *
+         * @see  https://test.bitpay.com/bitcoin-exchange-rates for supported currencies
+         * @todo Shopping cart will need to support XBT
+         */
+        $invoice
+            ->setCurrency(new Currency('XBT'))
+            ->setOrderId($item['order_id'])
+            // You'll receive Instant Payment Notifications (IPN) at this URL.
+            // It should be SSL secured for security purposes
+            ->setNotificationUrl($this->configIPNCallbackURL);
+
+        /**
+         * Updates the invoice with new information such as the invoice id and the URL where
+         * a customer can view the invoice.
+         */
+        try {
+            $invoice = $client->createInvoice($invoice);
+        } catch (\Exception $e) {
+            throw new BTCPayException($e->getMessage());
+        }
+
+        // TODO Wrap a new `PurchaseResponse` object with the properties of `$invoice`
+        $response = (new PurchaseResponse())->setInvoice($invoice); // Pseudo-code
+
+        // TODO possibly all this guff isn't even needed. Just the createInvoice() logic??
+        /*
         $response = $this->httpClient->request(
             $this->getHttpMethod(),
             $this->getEndpoint(),
@@ -106,104 +207,13 @@ abstract class AbstractRequest extends CommonAbstractRequest
             ],
             $data
         );
+        */
 
         return $this->response = $this->createResponse(
             $response,
             json_decode($response->getBody()->getContents(),
             true
         ));
-    }
-
-    /**
-     * @todo Finish this off / refactor as necessary
-     * 
-     * @return array
-     */
-    public function createInvoice(): array
-    {
-        // See 002.php for explanation
-        // Password may need to be updated if you changed it
-        $storageEngine = new EncryptedFilesystemStorage('YourTopSecretPassword');
-        $privateKey = $storageEngine->load('/tmp/bitpay.pri');
-        $publicKey = $storageEngine->load('/tmp/bitpay.pub');
-        $client        = new Client();
-        $adapter       = new \Bitpay\Client\Adapter\CurlAdapter();
-        $client->setPrivateKey($privateKey);
-        $client->setPublicKey($publicKey);
-        $client->setUri('https://btcpay.server/');
-        $client->setAdapter($adapter);
-        // ---------------------------
-
-        /**
-         * The last object that must be injected is the token object.
-         */
-        $token = new \Bitpay\Token();
-        $token->setToken('UpdateThisValue'); // UPDATE THIS VALUE
-
-        /**
-         * Token object is injected into the client
-         */
-        $client->setToken($token);
-
-        /**
-         * This is where we will start to create an Invoice object, make sure to check
-         * the InvoiceInterface for methods that you can use.
-         */
-        $invoice = new \Bitpay\Invoice();
-
-        $buyer = new \Bitpay\Buyer();
-        $buyer
-            ->setEmail('buyeremail@test.com');
-
-        // Add the buyers info to invoice
-        $invoice->setBuyer($buyer);
-
-        /**
-         * Item is used to keep track of a few things
-         */
-        $item = new \Bitpay\Item();
-        $item
-            ->setCode('skuNumber')
-            ->setDescription('General Description of Item')
-            ->setPrice('1.99');
-        $invoice->setItem($item);
-
-        /**
-         * BitPay supports multiple different currencies. Most shopping cart applications
-         * and applications in general have defined set of currencies that can be used.
-         * Setting this to one of the supported currencies will create an invoice using
-         * the exchange rate for that currency.
-         *
-         * @see https://test.bitpay.com/bitcoin-exchange-rates for supported currencies
-         */
-        $invoice->setCurrency(new \Bitpay\Currency('USD'));
-
-        // Configure the rest of the invoice
-        $invoice
-            ->setOrderId('OrderIdFromYourSystem')
-            // You will receive IPN's at this URL, should be HTTPS for security purposes!
-            ->setNotificationUrl('https://store.example.com/bitpay/callback');
-
-
-        /**
-         * Updates invoice with new information such as the invoice id and the URL where
-         * a customer can view the invoice.
-         */
-        try {
-            echo "Creating invoice at BitPay now.".PHP_EOL;
-            $client->createInvoice($invoice);
-        } catch (\Exception $e) {
-            echo "Exception occured: " . $e->getMessage().PHP_EOL;
-            $request  = $client->getRequest();
-            $response = $client->getResponse();
-            echo (string) $request.PHP_EOL.PHP_EOL.PHP_EOL;
-            echo (string) $response.PHP_EOL.PHP_EOL;
-            exit(1); // We do not want to continue if something went wrong
-        }
-
-        echo 'Invoice "'.$invoice->getId().'" created, see '.$invoice->getUrl().PHP_EOL;
-        echo "Verbose details.".PHP_EOL;
-        print_r($invoice);
     }
 
     /**
