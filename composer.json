@@ -25,7 +25,7 @@
     ],
     "autoload": {
         "psr-4": {
-            "Dcentrica\\Omnipay\\BTCPayServer\\": "src/"
+            "Omnipay\\BTCPayServer\\": "src/"
         }
     },
     "require": {
