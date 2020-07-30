@@ -6,7 +6,7 @@
  * @author  Elliot Sawyer <elliot.sawyer@gmail.com>
  */
 
-namespace Dcentrica\Omnipay\BTCPayServer;
+namespace Omnipay\BTCPayServer;
 
 use Omnipay\Common\AbstractGateway;
 use Dcentrica\Omnipay\BTCPayServer\Message\PurchaseStatusRequest;
