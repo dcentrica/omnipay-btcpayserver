@@ -142,7 +142,6 @@ abstract class AbstractRequest extends CommonAbstractRequest
         $adapter = new CurlAdapter();
         $client->setPrivateKey($privateKey);
         $client->setPublicKey($publicKey);
-        $client->setUri($this->serverLocation);
         $client->setAdapter($adapter);
 
         // The last object that must be injected is the token object.
@@ -156,16 +155,17 @@ abstract class AbstractRequest extends CommonAbstractRequest
          * Create an Invoice object. Ensure to check the `InvoiceInterface` for methods
          * able to uses.
          */
-        $buyer = (new Buyer())->setEmail($item['buyer']['email']);
+        // `Item` is used to keep track of a few things
+        $item = (new Item())
+            ->setCode($data['sku'] ?? 'TODO')
+            ->setDescription($data['itemDesc'] ?? 'TODO')
+            ->setPrice($data['price']);
+        $buyer = (new Buyer())->setEmail($data['buyer']['email'] ?? 'todo@todo.com');
 
         // Add the buyer's info to the invoice
         $invoice = (new Invoice())->setBuyer($buyer);
 
-        // `Item` is used to keep track of a few things
-        $item = (new Item())
-            ->setCode($item['sku'])
-            ->setDescription($item['description'])
-            ->setPrice($item['price']);
+
         $invoice->setItem($item);
 
         /**
@@ -178,8 +178,8 @@ abstract class AbstractRequest extends CommonAbstractRequest
          * @todo Shopping cart will need to support XBT
          */
         $invoice
-            ->setCurrency(new Currency('XBT'))
-            ->setOrderId($item['order_id'])
+            ->setCurrency(new Currency('BTC'))
+            ->setOrderId($data['order_id'] ?? 'TODO')
             // You'll receive Instant Payment Notifications (IPN) at this URL.
             // It should be SSL secured for security purposes
             ->setNotificationUrl($this->configIPNCallbackURL);
