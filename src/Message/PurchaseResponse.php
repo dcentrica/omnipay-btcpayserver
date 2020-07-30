@@ -6,7 +6,7 @@
  * @author  Elliot Sawyer <elliot.sawyer@gmail.com>
  */
 
-namespace Dcentrica\Omnipay\BTCPayServer\Message;
+namespace Dcentrica\BTCPayServer\Message;
 
 use Omnipay\Common\Message\AbstractResponse;
 use Omnipay\Common\Message\RedirectResponseInterface;

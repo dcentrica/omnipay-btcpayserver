@@ -6,7 +6,7 @@
  * @author  Elliot Sawyer <elliot.sawyer@gmail.com>
  */
 
-namespace Dcentrica\Omnipay\BTCPayServer\Message;
+namespace Dcentrica\BTCPayServer\Message;
 
 use Omnipay\Common\Message\AbstractRequest as CommonAbstractRequest;
 use Omnipay\Common\Message\AbstractResponse as CommonAbstractResponse;
@@ -122,11 +122,11 @@ abstract class AbstractRequest extends CommonAbstractRequest
      *          ..into sendData().
      *       2. Debug what we get out of `$data` when running a shop, before it's sent to btcpay
      *       4. TODO: Add 'item' array/object to $data representing the thing that was purchased
-     *       3. All the stuff from 1. should prob be munged into `$data` and sent along with it 
+     *       3. All the stuff from 1. should prob be munged into `$data` and sent along with it
      *       ...maybe this is better to go into `PurchaseRequest`??
-     * 
+     *
      *       See:
-     * 
+     *
      *       - https://github.com/thephpleague/omnipay-common/search?q=sendData&unscoped_q=sendData
      *       - https://github.com/thephpleague/omnipay-braintree/search?q=setData&unscoped_q=sendData
      */
@@ -218,7 +218,7 @@ abstract class AbstractRequest extends CommonAbstractRequest
 
     /**
      * Internal response object factory.
-     * 
+     *
      * @param  AbstractResponse $response
      * @param  array            $data
      * @return PurchaseResponse

@@ -6,15 +6,17 @@
  * @author  Elliot Sawyer <elliot.sawyer@gmail.com>
  */
 
-namespace Dcentrica\Omnipay\BTCPayServer\Message;
+namespace Dcentrica\BTCPayServer\Message;
+
+use Dcentrica\BTCPayServer\Message\AbstractRequest;
 
 /**
  * BitPay Purchase Request
- * 
- * TODO: 
+ *
+ * TODO:
  * TODO: Populate with contents of: https://github.com/btcpayserver/php-bitpay-client/blob/master/examples/tutorial/003_createInvoice.php
  * And: https://github.com/btcpayserver/php-bitpay-client/blob/master/examples/CreateInvoice.php
- * 
+ *
  * @see:
  * - \Omnipay\Common\Message\AbstractRequest::getData()
  */

@@ -9,8 +9,8 @@
 namespace Omnipay\BTCPayServer;
 
 use Omnipay\Common\AbstractGateway;
-use Dcentrica\Omnipay\BTCPayServer\Message\PurchaseStatusRequest;
-use Dcentrica\Omnipay\BTCPayServer\Message\PurchaseRequest;
+use Dcentrica\BTCPayServer\Message\PurchaseStatusRequest;
+use Dcentrica\BTCPayServer\Message\PurchaseRequest;
 
 /**
  * BtcPayServer Gateway
