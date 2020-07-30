@@ -55,7 +55,7 @@ abstract class AbstractRequest extends CommonAbstractRequest
     /**
      * @var string
      */
-    protected $configEncryptionPasswd = '';
+    protected $configEncryptionPasswd = 'TopSecretPassword'; // Ummm TODO
 
     /**
      * @var string
@@ -72,10 +72,10 @@ abstract class AbstractRequest extends CommonAbstractRequest
         // e.g. https://test.bitpay.com/api
         $this->testEndpoint = getenv('BTCPAYSERVER_ENDPOINT_TEST');
         $this->pairingToken = getenv('BTCPAYSERVER_PAIRING_TOKEN');
-        $this->keyPrivateLocation = getenv('BTCPAYSERVER_PRIKEY_LOC') ?? '/tmp/bitpay.pri';
-        $this->keyPublicLocation = getenv('BTCPAYSERVER_PUBKEY_LOC') ?? '/tmp/bitpay.pub';
+        //$this->keyPrivateLocation = getenv('BTCPAYSERVER_PRIKEY_LOC') ?? '/tmp/bitpay.pri';
+        //$this->keyPublicLocation = getenv('BTCPAYSERVER_PUBKEY_LOC') ?? '/tmp/bitpay.pub';
         $this->serverLocation = getenv('BTCPAYSERVER_URL');
-        $this->configEncryptionPasswd = getenv('BTCPAYSERVER_CONF_ENC_PASS'); // TODO use DEK instead
+        //$this->configEncryptionPasswd = getenv('BTCPAYSERVER_CONF_ENC_PASS'); // TODO use DEK instead
         $this->configIPNCallbackURL = getenv('BTCPAYSERVER_CONF_IPN_CALLBACK_URL');
     }
 
@@ -136,8 +136,8 @@ abstract class AbstractRequest extends CommonAbstractRequest
         // See 002.php for explanation
         // Password may need to be updated if you changed it
         $storageEngine = new EncryptedFilesystemStorage($this->configEncryptionPasswd);
-        $privateKey = $storageEngine->load($this->keyPrivateLocation);
-        $publicKey = $storageEngine->load($this->keyPublicLocation);
+        $privateKey = $storageEngine->load('/home/russellmichell/htdocs/catathon/bitpay.pri');
+        $publicKey = $storageEngine->load('/home/russellmichell/htdocs/catathon/bitpay.pub');
         $client = new BTCPayClient();
         $adapter = new CurlAdapter();
         $client->setPrivateKey($privateKey);
