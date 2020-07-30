@@ -31,7 +31,8 @@
     "require": {
         "php": ">=7.1",
         "omnipay/common": "~3.0",
-        "bitpay/php-client": "dev-master"
+        "bitpay/php-client": "dev-master",
+        "btcpayserver/btcpayserver-php-client": "~1.0.0"
     },
     "require-dev": {
         "omnipay/tests": "~3.0"
