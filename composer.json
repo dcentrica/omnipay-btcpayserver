@@ -23,11 +23,6 @@
             "email": "elliot.sawyer@gmail.com"
         }
     ],
-    "autoload": {
-        "psr-4": {
-            "Omnipay\\BTCPayServer\\": "src/"
-        }
-    },
     "require": {
         "php": ">=7.1",
         "omnipay/common": "~3.0",
