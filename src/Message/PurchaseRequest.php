@@ -6,9 +6,9 @@
  * @author  Elliot Sawyer <elliot.sawyer@gmail.com>
  */
 
-namespace Dcentrica\BTCPayServer\Message;
+namespace Omnipay\BTCPayServer\Message;
 
-use Dcentrica\BTCPayServer\Message\AbstractRequest;
+use Omnipay\BTCPayServer\Message\AbstractRequest;
 
 /**
  * BitPay Purchase Request

@@ -41,5 +41,10 @@
             "type": "vcs",
             "url": "https://github.com/btcpayserver/php-bitpay-client.git"
         }
-    ]
+    ],
+    "autoload": {
+        "psr-4": {
+            "Omnipay\\BTCPayServer\\": "src"
+        }
+    }
 }

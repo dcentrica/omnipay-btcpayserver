@@ -6,7 +6,7 @@
  * @author  Elliot Sawyer <elliot.sawyer@gmail.com>
  */
 
-namespace Dcentrica\BTCPayServer\Message;
+namespace Omnipay\BTCPayServer\Message;
 
 use Omnipay\Common\Message\AbstractRequest as CommonAbstractRequest;
 use Omnipay\Common\Message\AbstractResponse as CommonAbstractResponse;
@@ -18,7 +18,7 @@ use Bitpay\Invoice;
 use Bitpay\Buyer;
 use Bitpay\Item;
 use Bitpay\Currency;
-use Dcentrica\Omnipay\BTCPayServer\Exception\BTCPayException;
+use Omnipay\BTCPayServer\Exception\BTCPayException;
 
 abstract class AbstractRequest extends CommonAbstractRequest
 {
