@@ -18,6 +18,7 @@ use Bitpay\Invoice;
 use Bitpay\Buyer;
 use Bitpay\Item;
 use Bitpay\Currency;
+use Bitpay\Network\Testnet;
 use Omnipay\BTCPayServer\Exception\BTCPayException;
 
 abstract class AbstractRequest extends CommonAbstractRequest
@@ -30,7 +31,7 @@ abstract class AbstractRequest extends CommonAbstractRequest
     /**
      * @var string
      */
-    protected $testEndpoint = '';
+    protected $testEndpoint = 'https://testnet.demo.btcpayserver.org';
 
     /**
      * @var string
@@ -50,7 +51,7 @@ abstract class AbstractRequest extends CommonAbstractRequest
     /**
      * @var string
      */
-    protected $serverLocation = '';
+    protected $serverLocation = 'https://testnet.demo.btcpayserver.org';
 
     /**
      * @var string
@@ -60,7 +61,7 @@ abstract class AbstractRequest extends CommonAbstractRequest
     /**
      * @var string
      */
-    protected $configIPNCallbackURL = '';
+    protected $configIPNCallbackURL = 'https://store.example.com/bitpay/callback';
 
     /**
      * @return void
@@ -68,15 +69,15 @@ abstract class AbstractRequest extends CommonAbstractRequest
     public function __construct()
     {
         // e.g. https://bitpay.com/api'
-        $this->liveEndpoint = getenv('BTCPAYSERVER_ENDPOINT_LIVE');
+        //$this->liveEndpoint = getenv('BTCPAYSERVER_ENDPOINT_LIVE');
         // e.g. https://test.bitpay.com/api
-        $this->testEndpoint = getenv('BTCPAYSERVER_ENDPOINT_TEST');
-        $this->pairingToken = getenv('BTCPAYSERVER_PAIRING_TOKEN');
+        //$this->testEndpoint = getenv('BTCPAYSERVER_ENDPOINT_TEST');
+        //$this->pairingToken = getenv('BTCPAYSERVER_PAIRING_TOKEN');
         //$this->keyPrivateLocation = getenv('BTCPAYSERVER_PRIKEY_LOC') ?? '/tmp/bitpay.pri';
         //$this->keyPublicLocation = getenv('BTCPAYSERVER_PUBKEY_LOC') ?? '/tmp/bitpay.pub';
-        $this->serverLocation = getenv('BTCPAYSERVER_URL');
+        //$this->serverLocation = getenv('BTCPAYSERVER_URL');
         //$this->configEncryptionPasswd = getenv('BTCPAYSERVER_CONF_ENC_PASS'); // TODO use DEK instead
-        $this->configIPNCallbackURL = getenv('BTCPAYSERVER_CONF_IPN_CALLBACK_URL');
+        //$this->configIPNCallbackURL = getenv('BTCPAYSERVER_CONF_IPN_CALLBACK_URL');
     }
 
     /**
@@ -84,6 +85,7 @@ abstract class AbstractRequest extends CommonAbstractRequest
      */
     public function getApiKey(): string
     {
+        // See YML config
         return $this->getParameter('apiKey');
     }
 
@@ -93,6 +95,7 @@ abstract class AbstractRequest extends CommonAbstractRequest
      */
     public function setApiKey(string $value)
     {
+        // See YML config
         return $this->setParameter('apiKey', $value);
     }
 
@@ -140,6 +143,7 @@ abstract class AbstractRequest extends CommonAbstractRequest
         $publicKey = $storageEngine->load('/home/russellmichell/htdocs/catathon/bitpay.pub');
         $client = new BTCPayClient();
         $adapter = new CurlAdapter();
+        $client->setNetwork(new Testnet());
         $client->setPrivateKey($privateKey);
         $client->setPublicKey($publicKey);
         $client->setAdapter($adapter);
@@ -178,6 +182,7 @@ abstract class AbstractRequest extends CommonAbstractRequest
          * @todo Shopping cart will need to support XBT
          */
         $invoice
+            ->setUrl($this->serverLocation)
             ->setCurrency(new Currency('BTC'))
             ->setOrderId($data['order_id'] ?? 'TODO')
             // You'll receive Instant Payment Notifications (IPN) at this URL.
@@ -188,11 +193,13 @@ abstract class AbstractRequest extends CommonAbstractRequest
          * Updates the invoice with new information such as the invoice id and the URL where
          * a customer can view the invoice.
          */
-        try {
-            $invoice = $client->createInvoice($invoice);
-        } catch (\Exception $e) {
+       // try {
+        $invoice = $client->createInvoice($invoice);
+        //}
+
+/*         catch (\Exception $e) {
             throw new BTCPayException($e->getMessage());
-        }
+        } */
 
         // TODO Wrap a new `PurchaseResponse` object with the properties of `$invoice`
         $response = (new PurchaseResponse())->setInvoice($invoice); // Pseudo-code
