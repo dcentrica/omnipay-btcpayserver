@@ -36,12 +36,12 @@
             "dev-master": "3.0.x-dev"
         }
     },
-    "repositories": [
-        {
+    "repositories": {
+        "bitpay/bitpay/php-client": {
             "type": "vcs",
             "url": "https://github.com/btcpayserver/php-bitpay-client.git"
         }
-    ],
+    },
     "autoload": {
         "psr-4": {
             "Omnipay\\BTCPayServer\\": "src"
