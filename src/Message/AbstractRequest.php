@@ -153,7 +153,9 @@ abstract class AbstractRequest extends CommonAbstractRequest
          */
         $invoice
             ->setUrl('https://' . self::getEnv('BTCPAYSERVER_HOST'))
-            ->setCurrency(new Currency('BTC'))
+
+            //TODO: this should be configurable, maybe via .env
+            ->setCurrency(new Currency('NZD'))
             ->setOrderId($data['order_id'] ?? 'TODO')
             // You'll receive Instant Payment Notifications (IPN) at this URL.
             // It should be SSL secured for security purposes
