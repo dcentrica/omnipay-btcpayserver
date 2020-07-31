@@ -8,6 +8,7 @@
 
 namespace Omnipay\BTCPayServer\Message;
 
+use Symfony\Component\Dotenv\Dotenv;
 use Omnipay\Common\Message\AbstractRequest as CommonAbstractRequest;
 use Omnipay\Common\Message\AbstractResponse as CommonAbstractResponse;
 use Bitpay\Storage\EncryptedFilesystemStorage;
@@ -24,60 +25,37 @@ use Omnipay\BTCPayServer\Exception\BTCPayException;
 abstract class AbstractRequest extends CommonAbstractRequest
 {
     /**
-     * @var string
+     * Get value of an environment variable.
+     *
+     * @param  string $name
+     * @return mixed  Value of the environment variable, or false if not set.
+     * @throws Exception
+     * @todo Move this into a more suitable class.
      */
-    protected $liveEndpoint = '';
-
-    /**
-     * @var string
-     */
-    protected $testEndpoint = 'https://testnet.demo.btcpayserver.org';
-
-    /**
-     * @var string
-     */
-    protected $pairingToken = '';
-
-    /**
-     * @var string
-     */
-    protected $keyPrivateLocation = '';
-
-    /**
-     * @var string
-     */
-    protected $keyPublicLocation = '';
-
-    /**
-     * @var string
-     */
-    protected $serverLocation = 'https://testnet.demo.btcpayserver.org';
-
-    /**
-     * @var string
-     */
-    protected $configEncryptionPasswd = 'TopSecretPassword'; // Ummm TODO
-
-    /**
-     * @var string
-     */
-    protected $configIPNCallbackURL = 'https://store.example.com/bitpay/callback';
-
-    /**
-     * @return void
-     */
-    public function __construct()
+    protected static function getEnv(string $name)
     {
-        // e.g. https://bitpay.com/api'
-        //$this->liveEndpoint = getenv('BTCPAYSERVER_ENDPOINT_LIVE');
-        // e.g. https://test.bitpay.com/api
-        //$this->testEndpoint = getenv('BTCPAYSERVER_ENDPOINT_TEST');
-        //$this->pairingToken = getenv('BTCPAYSERVER_PAIRING_TOKEN');
-        //$this->keyPrivateLocation = getenv('BTCPAYSERVER_PRIKEY_LOC') ?? '/tmp/bitpay.pri';
-        //$this->keyPublicLocation = getenv('BTCPAYSERVER_PUBKEY_LOC') ?? '/tmp/bitpay.pub';
-        //$this->serverLocation = getenv('BTCPAYSERVER_URL');
-        //$this->configEncryptionPasswd = getenv('BTCPAYSERVER_CONF_ENC_PASS'); // TODO use DEK instead
-        //$this->configIPNCallbackURL = getenv('BTCPAYSERVER_CONF_IPN_CALLBACK_URL');
+        if (!$baseDir = $_SERVER['DOCUMENT_ROOT'] ?? null) {
+            throw new \Exception(('Cannot discover webserver document root!'));
+        }
+
+        $basePath  = str_replace('public', '', $_SERVER['DOCUMENT_ROOT']);
+        $envFilePath = realpath($basePath . '/.env');
+
+        if (!file_exists($envFilePath)) {
+            throw new \Exception('.env file not found!');
+        }
+
+        // Exports .env vars
+        (new Dotenv())->load($envFilePath);
+
+        switch (true) {
+            case  is_array($_ENV) && array_key_exists($name, $_ENV):
+                return $_ENV[$name];
+            case  is_array($_SERVER) && array_key_exists($name, $_SERVER):
+                return $_SERVER[$name];
+            default:
+                return getenv($name);
+        }
     }
 
     /**
@@ -112,9 +90,10 @@ abstract class AbstractRequest extends CommonAbstractRequest
      */
     public function getEndpoint(): string
     {
+        // e.g. https://my-bitpayserver.org/api' or https://test.my-bitpayserver.org/api'
         return $this->getTestMode() ?
-            $this->testEndpoint :
-            $this->liveEndpoint;
+            self::getEnv('BTCPAYSERVER_ENDPOINT_TEST') :
+            self::getEnv('BTCPAYSERVER_ENDPOINT_LIVE');
     }
 
     /**
@@ -138,9 +117,9 @@ abstract class AbstractRequest extends CommonAbstractRequest
         // Untested, buggy as hell code for sending invoice data to BTCPayServer...
         // See 002.php for explanation
         // Password may need to be updated if you changed it
-        $storageEngine = new EncryptedFilesystemStorage($this->configEncryptionPasswd);
-        $privateKey = $storageEngine->load('/home/russellmichell/htdocs/catathon/bitpay.pri');
-        $publicKey = $storageEngine->load('/home/russellmichell/htdocs/catathon/bitpay.pub');
+        $storageEngine = new EncryptedFilesystemStorage(self::getEnv('BTCPAYSERVER_CONF_ENC_PASS'));
+        $privateKey = $storageEngine->load(self::getEnv('BTCPAYSERVER_PRIKEY_LOC'));
+        $publicKey = $storageEngine->load(self::getEnv('BTCPAYSERVER_PUBKEY_LOC'));
         $client = new BTCPayClient();
         $adapter = new CurlAdapter();
         $client->setNetwork(new Testnet());
@@ -167,10 +146,9 @@ abstract class AbstractRequest extends CommonAbstractRequest
         $buyer = (new Buyer())->setEmail($data['buyer']['email'] ?? 'todo@todo.com');
 
         // Add the buyer's info to the invoice
-        $invoice = (new Invoice())->setBuyer($buyer);
-
-
-        $invoice->setItem($item);
+        $invoice = (new Invoice())
+            ->setBuyer($buyer)
+            ->setItem($item);
 
         /**
          * BTCPayServer supports multiple currencies. Most shopping cart applications
@@ -179,27 +157,20 @@ abstract class AbstractRequest extends CommonAbstractRequest
          * the exchange rate for that currency.
          *
          * @see  https://test.bitpay.com/bitcoin-exchange-rates for supported currencies
-         * @todo Shopping cart will need to support XBT
          */
         $invoice
-            ->setUrl($this->serverLocation)
+            ->setUrl('https://' . self::getEnv('BTCPAYSERVER_HOST'))
             ->setCurrency(new Currency('BTC'))
             ->setOrderId($data['order_id'] ?? 'TODO')
             // You'll receive Instant Payment Notifications (IPN) at this URL.
             // It should be SSL secured for security purposes
-            ->setNotificationUrl($this->configIPNCallbackURL);
+            ->setNotificationUrl(self::getEnv('BTCPAYSERVER_STORE_CALLBACK'));
 
         /**
          * Updates the invoice with new information such as the invoice id and the URL where
          * a customer can view the invoice.
          */
-       // try {
         $invoice = $client->createInvoice($invoice);
-        //}
-
-/*         catch (\Exception $e) {
-            throw new BTCPayException($e->getMessage());
-        } */
 
         // TODO Wrap a new `PurchaseResponse` object with the properties of `$invoice`
         $response = (new PurchaseResponse())->setInvoice($invoice); // Pseudo-code
