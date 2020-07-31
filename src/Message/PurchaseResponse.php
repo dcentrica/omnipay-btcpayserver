@@ -33,9 +33,9 @@ class PurchaseResponse extends AbstractResponse implements RedirectResponseInter
     }
 
     /**
-     * @return string
+     * @return mixed string|void
      */
-    public function getMessage(): string
+    public function getMessage()
     {
         if (isset($this->data['error'])) {
             return $this->data['error']['type'] . ': ' . $this->data['error']['message'];
@@ -43,9 +43,9 @@ class PurchaseResponse extends AbstractResponse implements RedirectResponseInter
     }
 
     /**
-     * @return string
+     * @return mixed string|void
      */
-    public function getTransactionReference(): string
+    public function getTransactionReference()
     {
         if (isset($this->data['id'])) {
             return $this->data['id'];
@@ -60,8 +60,6 @@ class PurchaseResponse extends AbstractResponse implements RedirectResponseInter
         if (isset($this->data['url'])) {
             return $this->data['url'];
         }
-
-        return '';
     }
 
     /**
