@@ -55,7 +55,7 @@ class PurchaseResponse extends AbstractResponse implements RedirectResponseInter
     /**
      * @return string
      */
-    public function getRedirectUrl(): string
+    public function getRedirectUrl()
     {
         if (isset($this->data['url'])) {
             return $this->data['url'];

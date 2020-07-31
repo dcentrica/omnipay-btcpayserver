@@ -126,6 +126,7 @@ abstract class AbstractRequest extends CommonAbstractRequest
         $data['price'] = $data['price'] ?? 'DUMMY';
         $data['buyer']['email'] = $data['buyer']['email'] ?? 'DUMMY@DUMMY.com';
         $data['url'] = $data['url'] ?? self::getEnv('BTCPAYSERVER_STORE_REDIRECT');
+        $data['order_id'] = $data['order_id'] ?? 'DUMMY';
 
         /**
          * Create an Invoice object. Ensure to check the `InvoiceInterface` for methods
@@ -156,7 +157,8 @@ abstract class AbstractRequest extends CommonAbstractRequest
 
             //TODO: this should be configurable, maybe via .env
             ->setCurrency(new Currency('NZD'))
-            ->setOrderId($data['order_id'] ?? 'TODO')
+            ->setOrderId($data['order_id'])
+            ->setRedirectUrl(self::getEnv('BTCPAYSERVER_STORE_REDIRECT'))
             // You'll receive Instant Payment Notifications (IPN) at this URL.
             // It should be SSL secured for security purposes
             ->setNotificationUrl(self::getEnv('BTCPAYSERVER_STORE_CALLBACK'));
