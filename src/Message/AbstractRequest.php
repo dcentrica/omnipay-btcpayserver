@@ -130,7 +130,9 @@ abstract class AbstractRequest extends CommonAbstractRequest
 
         // The last object that must be injected is the token object.
         $token = new Token();
-        $token->setToken('UpdateThisValue'); // TODO - UPDATE THIS VALUE, where's it come from!?
+        $token->setToken(
+            self::getEnv('BTCPAYSERVER_INVOICE_TOKEN')
+        );
 
         // Token object is injected into the client
         $client->setToken($token);
