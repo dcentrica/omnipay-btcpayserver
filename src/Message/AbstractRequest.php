@@ -122,7 +122,8 @@ abstract class AbstractRequest extends CommonAbstractRequest
         $publicKey = $storageEngine->load(self::getEnv('BTCPAYSERVER_PUBKEY_LOC'));
         $client = new BTCPayClient();
         $adapter = new CurlAdapter();
-        $client->setNetwork(new Testnet());
+        // $client->setNetwork(new Testnet());
+        $client->setUri(self::getEnv('BTCPAYSERVER_HOST'));
         $client->setPrivateKey($privateKey);
         $client->setPublicKey($publicKey);
         $client->setAdapter($adapter);

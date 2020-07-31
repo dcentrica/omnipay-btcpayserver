@@ -61,7 +61,7 @@ class PurchaseResponse extends AbstractResponse implements RedirectResponseInter
             return $this->data['url'];
         }
 
-        return ''
+        return '';
     }
 
     /**
