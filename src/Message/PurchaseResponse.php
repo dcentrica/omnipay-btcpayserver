@@ -2,8 +2,8 @@
 
 /**
  * @package dcentrica/omnipay-btcpayserverpay
- * @author  Russell Michell <hello@dcentrica.com>
- * @author  Elliot Sawyer <elliot.sawyer@gmail.com>
+ * @author  Russell Michell <hello@dcentrica.com> 2020
+ * @author  Elliot Sawyer <elliot.sawyer@gmail.com> 2020
  */
 
 namespace Omnipay\BTCPayServer\Message;
@@ -12,7 +12,7 @@ use Omnipay\Common\Message\AbstractResponse;
 use Omnipay\Common\Message\RedirectResponseInterface;
 
 /**
- * BitPay Purchase Response
+ * BTCPayServer Purchase Response
  */
 class PurchaseResponse extends AbstractResponse implements RedirectResponseInterface
 {
