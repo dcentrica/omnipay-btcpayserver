@@ -2,8 +2,8 @@
 
 /**
  * @package dcentrica/omnipay-btcpayserverpay
- * @author  Russell Michell <hello@dcentrica.com>
- * @author  Elliot Sawyer <elliot.sawyer@gmail.com>
+ * @author  Russell Michell <hello@dcentrica.com> 2020
+ * @author  Elliot Sawyer <elliot.sawyer@gmail.com> 2020
  */
 
 namespace Omnipay\BTCPayServer\Message;
@@ -11,17 +11,19 @@ namespace Omnipay\BTCPayServer\Message;
 use Symfony\Component\Dotenv\Dotenv;
 use Omnipay\Common\Message\AbstractRequest as CommonAbstractRequest;
 use Omnipay\Common\Message\AbstractResponse as CommonAbstractResponse;
-use Bitpay\Storage\EncryptedFilesystemStorage;
-use Bitpay\Client\Client as BTCPayClient;
-use Bitpay\Client\Adapter\CurlAdapter;
-use Bitpay\Token;
-use Bitpay\Invoice;
-use Bitpay\Buyer;
-use Bitpay\Item;
-use Bitpay\Currency;
-use Bitpay\Network\Testnet;
-use Omnipay\BTCPayServer\Exception\BTCPayException;
+use BTCPayServer\Storage\EncryptedFilesystemStorage;
+use BTCPayServer\Client\Client;
+use BTCPayServer\Client\Adapter\CurlAdapter;
+use BTCPayServer\Token;
+use BTCPayServer\Invoice;
+use BTCPayServer\Buyer;
+use BTCPayServer\Item;
+use BTCPayServer\Currency;
 
+/**
+ * TODO: Much of the gunt work is done in this, as _abstract_ class.
+ * Think about moving the `sendData()` logic into concrete class like `PurchaseRequest`.
+ */
 abstract class AbstractRequest extends CommonAbstractRequest
 {
     /**
@@ -90,7 +92,7 @@ abstract class AbstractRequest extends CommonAbstractRequest
      */
     public function getEndpoint(): string
     {
-        // e.g. https://my-bitpayserver.org/api' or https://test.my-bitpayserver.org/api'
+        // e.g. https://my-btcpayserver.org/api' or https://test.my-btcpayserver.org/api'
         return $this->getTestMode() ?
             self::getEnv('BTCPAYSERVER_ENDPOINT_TEST') :
             self::getEnv('BTCPAYSERVER_ENDPOINT_LIVE');
@@ -102,85 +104,73 @@ abstract class AbstractRequest extends CommonAbstractRequest
      */
     public function sendData($data): CommonAbstractResponse
     {
+        // TODO complete this with help from: docs/invoices/index.md
         $storageEngine = new EncryptedFilesystemStorage(self::getEnv('BTCPAYSERVER_CONF_ENC_PASS'));
         $privateKey = $storageEngine->load(self::getEnv('BTCPAYSERVER_PRIKEY_LOC'));
         $publicKey = $storageEngine->load(self::getEnv('BTCPAYSERVER_PUBKEY_LOC'));
-        $client = new BTCPayClient();
-        $adapter = new CurlAdapter();
-        // $client->setNetwork(new Testnet());
+        $token = (new Token())->setToken(self::getEnv('BTCPAYSERVER_INVOICE_TOKEN'));
+
+        $client = new Client();
         $client->setUri(self::getEnv('BTCPAYSERVER_HOST'));
         $client->setPrivateKey($privateKey);
         $client->setPublicKey($publicKey);
-        $client->setAdapter($adapter);
-
-        // The last object that must be injected is the token object.
-        $token = (new Token())
-            ->setToken(self::getEnv('BTCPAYSERVER_INVOICE_TOKEN'));
-
-        // Token object is injected into the client
+        $client->setAdapter(new CurlAdapter());
         $client->setToken($token);
 
         // TEMP until we figure out how to get omnipay to properly populate $data
         $data['sku'] = $data['sku'] ?? 'DUMMY';
         $data['itemDesc'] = $data['itemDesc'] ?? 'DUMMY';
-        $data['price'] = $data['price'] ?? 'DUMMY';
+        $data['price'] = $data['price'] ?? '9.99';
         $data['buyer']['email'] = $data['buyer']['email'] ?? 'DUMMY@DUMMY.com';
         $data['url'] = $data['url'] ?? self::getEnv('BTCPAYSERVER_STORE_REDIRECT');
         $data['order_id'] = $data['order_id'] ?? 'DUMMY';
 
-        /**
-         * Create an Invoice object. Ensure to check the `InvoiceInterface` for methods
-         * able to uses.
-         */
         // `Item` is used to keep track of a few things
         $item = (new Item())
             ->setCode($data['sku'])
             ->setDescription($data['itemDesc'])
             ->setPrice($data['price']);
-        $buyer = (new Buyer())->setEmail($data['buyer']['email'] );
+        $buyer = (new Buyer())
+            ->setEmail($data['buyer']['email'] );
 
         // Add the buyer's info to the invoice
         $invoice = (new Invoice())
             ->setBuyer($buyer)
-            ->setItem($item);
-
-        /**
-         * BTCPayServer supports multiple currencies. Most shopping cart applications
-         * have a defined set of currencies that can be used.
-         * Setting this to one of the supported currencies will create an invoice using
-         * the exchange rate for that currency.
-         *
-         * @see  https://test.bitpay.com/bitcoin-exchange-rates for supported currencies
-         */
-        $invoice
+            ->setItem($item)
             ->setUrl('https://' . self::getEnv('BTCPAYSERVER_HOST'))
-
-            //TODO: this should be configurable, maybe via .env
-            ->setCurrency(new Currency('NZD'))
+            ->setCurrency(new Currency(self::getEnv('BTCPAYSERVER_STORE_DEFAULT_CURRENCY')))
             ->setOrderId($data['order_id'])
-            ->setRedirectUrl(self::getEnv('BTCPAYSERVER_STORE_REDIRECT'))
+            ->setRedirectUrl(self::getEnv('BTCPAYSERVER_STORE_REDIRECT'));
+
+        if ($callbackUrl = self::getEnv('BTCPAYSERVER_STORE_CALLBACK')) {
             // You'll receive Instant Payment Notifications (IPN) at this URL.
             // It should be SSL secured for security purposes
-            ->setNotificationUrl(self::getEnv('BTCPAYSERVER_STORE_CALLBACK'));
+            $invoice->setNotificationUrl($callbackUrl);
+        }
 
-        /**
-         * Updates the invoice with new information such as the invoice id and the URL where
-         * a customer can view the invoice.
-         */
-        $invoice = $client->createInvoice($invoice);
-        $purchaseResponse = new PurchaseResponse($this, $data);
+        if ($email = self::getEnv('BTCPAYSERVER_STORE_NOTIFICATION_EMAIL')) {
+            $invoice->setNotificationEmail($email);
+        }
 
-        return $purchaseResponse;
+        // Makes a request to BTCPayServer to its /invoices endpoint and creates
+        // a new invoice record there
+        $client->createInvoice($invoice);
+
+        // A PurchaseResponse is created & returned for Omnipay to work with
+        // TODO
+        // - At this point, we should redirect users to $invoice->getUrl()
+        // - Make use of getStatus() and only confirm purchase when == 'CONFIRMED'
+        return new PurchaseResponse($this, $data);
     }
 
     /**
      * Internal response object factory.
      *
      * @param  AbstractResponse $response
-     * @param  array            $data
+     * @param  mixed            $data
      * @return PurchaseResponse
      */
-    protected function createResponse($response, array $data): PurchaseResponse
+    protected function createResponse($response, $data): PurchaseResponse
     {
         return $this->response = new PurchaseResponse($response, $data);
     }
