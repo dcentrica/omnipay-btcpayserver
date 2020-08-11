@@ -12,9 +12,12 @@ processing library for PHP 5.3+. This package implements [BTCPayServer](https://
 
 This library should just wrap around the tutorial notes from the btcpayserver lib: https://github.com/btcpayserver/php-bitpay-client/blob/master/examples/tutorial/003_createInvoice.php
 
-* Mod AbstractRequest::sendData() with "Create Invoice" feature. See: btcpayserver/php-bitpay-client
-* Add "generateKeys" feature (Tidy up 001_generateKeys.php from btcpayserver/php-bitpay-client)
-* Get pairing code from btcpayserer itself and add as `BTCPAYSERVER_PAIRING_TOKEN` to .env (Skip 002_pair.php from btcpayserver/php-bitpay-client)
+* Patch key-generation and pairing scripts from btcpayserver/btcpayserver-php-client lib and ref them in this README
+
+## Requirements
+
+* See PHP and library dependencies in `composer.json`
+* A `.env` file used to manage environment variables
 
 ## Installation
 
@@ -57,6 +60,18 @@ BTCPAYSERVER_ENDPOINT_LIVE=""
 BTCPAYSERVER_STORE_NOTIFICATION_EMAIL="notifications@store.com"
 ```
 
+If you want to dispplay payment QR codes in a modal within your web store, a little JavaScript is required, an example is below:
+
+```javascript
+<script src="//my.btcpayserver.instance.com/modal/btcpay.js"></script>
+<script src="/path/to/my/jsquery.min.js"></script>
+<script>
+    // As an example, `invoiceId` could be configured to come through as a GET param
+    // The jQuery selector should identify the checkout button of your store
+    $('#my-checkout-button').on('click', function(e) { window.btcpay.showInvoice(invoiceId); });
+</script>
+```
+
 ## Basic Usage
 
 The following gateways are provided by this package:
@@ -68,17 +83,24 @@ repository. For BTCPayServer usage instructions, please see the main [BTCPayServ
 
 ## Support
 
-If you are having general issues with Omnipay, we suggest posting on
-[Stack Overflow](http://stackoverflow.com/). Be sure to add the
-[omnipay tag](http://stackoverflow.com/questions/tagged/omnipay) so it can be easily found.
+### Omnipay
 
-If you want to keep up to date with release anouncements, discuss ideas for the project,
-or ask more detailed questions, there is also a [mailing list](https://groups.google.com/forum/#!forum/omnipay) which
+If you are having general issues with Omnipay, we suggest posting on [Stack Overflow](http://stackoverflow.com/). Be sure to add the [omnipay tag](http://stackoverflow.com/questions/tagged/omnipay) so it can be easily found.
+
+If you want to keep up to date with release anouncements, discuss ideas for the project, or ask more detailed questions, there is also a [mailing list](https://groups.google.com/forum/#!forum/omnipay) which
 you can subscribe to.
 
 If you believe you have found a bug with Omnipay itself, please report it using the [GitHub issue tracker](https://github.com/thephpleague/omnipay-bitpay/issues),
 or better yet, fork the library and submit a pull request.
 
+### Omnipay BTCPayServer Driver
+
 If you believe you have found a bug with _this driver_, please report it using our [GitHub issue tracker](https://github.com/dcentrica/omnipay-btcpayserver/issues).
 
-For help with BTCPayServer, [visit the website](https://docs.btcpayserver.org/) or check out the [Mattermost channels](https://chat.btcpayserver.org/btcpayserver/).
+### BTCPayServer
+
+For help with BTCPayServer:
+
+* [visit the website](https://docs.btcpayserver.org/)
+* Sign-up to the [Mattermost channels](https://chat.btcpayserver.org/btcpayserver/).
+
