@@ -2,8 +2,8 @@
 
 /**
  * @package dcentrica/omnipay-btcpayserverpay
- * @author  Russell Michell <hello@dcentrica.com>
- * @author  Elliot Sawyer <elliot.sawyer@gmail.com>
+ * @author  Russell Michell <hello@dcentrica.com> 2020
+ * @author  Elliot Sawyer <elliot.sawyer@gmail.com> 2020
  */
 
 namespace Omnipay\BTCPayServer\Message;
@@ -11,11 +11,7 @@ namespace Omnipay\BTCPayServer\Message;
 use Omnipay\BTCPayServer\Message\AbstractRequest;
 
 /**
- * BitPay Purchase Request
- *
- * TODO:
- * TODO: Populate with contents of: https://github.com/btcpayserver/php-bitpay-client/blob/master/examples/tutorial/003_createInvoice.php
- * And: https://github.com/btcpayserver/php-bitpay-client/blob/master/examples/CreateInvoice.php
+ * BTCPayServer Purchase Request
  *
  * @see:
  * - \Omnipay\Common\Message\AbstractRequest::getData()

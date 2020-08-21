@@ -2,8 +2,8 @@
 
 /**
  * @package dcentrica/omnipay-btcpayserverpay
- * @author  Russell Michell <hello@dcentrica.com>
- * @author  Elliot Sawyer <elliot.sawyer@gmail.com>
+ * @author  Russell Michell <hello@dcentrica.com> 2020
+ * @author  Elliot Sawyer <elliot.sawyer@gmail.com> 2020
  */
 
 namespace Omnipay\BTCPayServer\Message;
@@ -39,7 +39,7 @@ class PurchaseStatusRequest extends PurchaseRequest
 
     /**
      * @param  PurchaseStatusResponse $reponse
-     * @param  array                  $data
+     * @param  mixed                  $data
      * @return PurchaseStatusResponse
      */
     protected function createResponse($response, $data): PurchaseStatusResponse
